@@ -3,8 +3,10 @@ Data analysis of choice behavior in a two-option experiment to understand prefer
 
 # Problem statement
 
-#Data description
+# Data description
 
-#Analytical approach
+# Key techniques used
 
-#
+# How to run the code
+
+# Example outputs:
