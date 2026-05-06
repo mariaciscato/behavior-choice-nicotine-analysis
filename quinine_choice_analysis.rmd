@@ -1,0 +1,132 @@
+### 1. Load packages
+
+library(tidyverse) library(rstatix) library(ggplot2) library(gtools)
+library(gplots) library(gdata) library(DBI) library(RMySQL)
+library(readr)
+
+### 2. Connect to database
+
+con \<- dbConnect( MySQL(), user = "root", password = "tetrode", dbname
+= "twobottleschoice", host = "192.168.25.156" )
+
+dbListTables(con)
+
+### 3. Extract database consumption data
+
+tab_conso \<- dbGetQuery( con, " SELECT id_experience, numero_session,
+start_session, end_session, numero_box, solution_drink1,
+solution_drink2, concentration_drink1, concentration_drink2,
+poids_animal, nom_animal, time, drink1, drink2, conso_end.drink1_end,
+conso_end.drink2_end FROM session, box, animal, conso, ( SELECT drink1
+AS drink1_end, drink2 AS drink2_end, box.id_box FROM conso, session, box
+WHERE box.id_session = session.id_session AND conso.id_box = box.id_box
+AND end_session = time ) conso_end WHERE session.id_session =
+box.id_session AND box.id_animal = animal.id_animal AND conso.id_box =
+box.id_box AND conso_end.id_box = box.id_box AND hour(time) = '8' AND
+minute(time) = '53' ORDER BY box.id_animal, numero_session, time " )
+
+write.csv(tab_conso, "BDD_2BC.csv", row.names = FALSE)
+
+### 4. Select experiment of interest
+
+ExpQui \<- tab_conso %\>% filter(id_experience == 54)
+
+### 5. Define mice included in the experiment
+
+mice \<- paste0("CM", 35:50)
+
+### 6. Function: compute consumption for one mouse
+
+make_mouse_consumption \<- function(mouse, data, active_solution,
+control_solution) {
+
+active_consumption \<- Consofunction(active_solution, mouse, data)
+control_consumption \<- Consofunction(control_solution, mouse, data)
+
+bind_rows(control_consumption, active_consumption) %\>% mutate( mouse =
+mouse, active_solution = active_solution, control_solution =
+control_solution ) }
+
+### 7. Nicotine vs water consumption
+
+nicotine_consumption \<- mice %\>% set_names() %\>% map_dfr( \~
+make_mouse_consumption( mouse = .x, data = ExpQui, active_solution =
+"Nicotine", control_solution = "eauB" ), .id = "mouse_id" )
+
+### 8. Quinine vs water consumption
+
+quinine_consumption \<- mice %\>% set_names() %\>% map_dfr( \~
+make_mouse_consumption( mouse = .x, data = ExpQui, active_solution =
+"Quinine", control_solution = "eauB" ), .id = "mouse_id" )
+
+### 9. Second water baseline period
+
+water2_consumption \<- mice %\>% set_names() %\>% map_dfr( \~
+Consofunction("eauB2", .x, ExpQui) %\>% mutate(mouse = .x), .id =
+"mouse_id" )
+
+### 10. Convert consumption to preference data
+
+nicotine_preferences \<- nicotine_consumption %\>% group_split(mouse)
+%\>% map_dfr(VolReelfunction, .id = "mouse_index")
+
+quinine_preferences \<- quinine_consumption %\>% group_split(mouse) %\>%
+map_dfr(VolReelfunction, .id = "mouse_index")
+
+### 11. Manual correction for session 11
+
+# This section is intentionally not automated.
+
+# It reconstructs a corrupted session caused by bottle leakage.
+
+DataSession11 \<- read_csv(
+"ownCloud/LabMaria/Data/2bc/ExpQui/finalfiles/20221130_eauA2_eauB2_1.csv",
+skip = 20 )
+
+Data11afterfix \<- read_csv(
+"ownCloud/LabMaria/Data/2bc/ExpQui/finalfiles/2022121_eauA2_eauB2afterfix11a_2.csv",
+skip = 20 )
+
+Data11forpoids \<- read_csv(
+"ownCloud/LabMaria/Data/2bc/ExpQui/finalfiles/20221130_eauA2_eauB2_1.csv",
+skip = 2 )
+
+Data11afterfix \<- Data11afterfix %\>% mutate( Time =
+as.character(Time), Date = as.character(Date) ) %\>% select(-7) %\>%
+filter( Drink2 != "NA", Date != "NA" ) %\>% mutate(Drink2 =
+as.numeric(Drink2))
+
+# Keep your existing CM35--CM50 correction code below
+
+### 12. Function: summarise preferences
+
+summarise_preferences \<- function(data) { data %\>% group_by(Conc) %\>%
+summarise( n = n(), mean_preference = mean(Preference, na.rm = TRUE),
+sem_preference = sd(Preference, na.rm = TRUE) / sqrt(n), mean_volume =
+mean(volume, na.rm = TRUE), sem_volume = sd(volume, na.rm = TRUE) /
+sqrt(n), mean_conc_reel = mean(ConcReel, na.rm = TRUE), sem_conc_reel =
+sd(ConcReel, na.rm = TRUE) / sqrt(n), .groups = "drop" ) }
+
+### 13. Compute summaries
+
+nicotine_summary \<- summarise_preferences(nicotine_preferences)
+quinine_summary \<- summarise_preferences(quinine_preferences)
+
+### 14. Plot results
+
+plot_preference \<- function(summary_data, title_text) {
+ggplot(summary_data, aes(x = as.factor(Conc), y = mean_preference)) +
+geom_col() + geom_errorbar( aes( ymin = mean_preference -
+sem_preference, ymax = mean_preference + sem_preference ), width = 0.2
+) + labs( title = title_text, x = "Concentration", y = "Mean preference
+(%)" ) + theme_minimal() }
+
+plot_preference(nicotine_summary, "Nicotine preference by
+concentration") plot_preference(quinine_summary, "Quinine preference by
+concentration")
+
+### 15. Save outputs
+
+write.csv(nicotine_consumption, "nicotine_consumption.csv", row.names =
+FALSE) write.csv(quinine_consumption, "quinine_consumption.csv",
+row.names = FALSE)
