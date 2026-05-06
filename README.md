@@ -113,8 +113,18 @@ Session-by-session consumption trajectories
 
 Representative outputs may include nicotine vs quinine comparisons, individual variability analyses, and corrected-session visualizations.
 
+> Note: Figures are derived from analysis outputs generated in R and were post-processed in Adobe Illustrator for publication-quality formatting.
+
 # Reproducibility
 
 The workflow was designed as a reproducible behavioral analytics pipeline integrating database extraction, longitudinal preprocessing, and automated visualization generation.
 Because experimental databases and raw correction files are not publicly distributed, users must provide local database access and raw CSV files before running the analysis.
+
+# Quinine Preference Across Concentrations
+
+![Quinine Preference](figures/quinine_preference.png)
+
+**Figure 1.** Percentage quinine preference across the three concentrations tested. Statistical analysis was performed using a Friedman test (n = 15, df = 3, *p* < 0.0001), followed by Mann–Whitney post hoc comparisons with Holm–Bonferroni correction. Significant differences were observed between 30 vs 100 µM quinine (*p* = 0.0004) and 100 vs 300 µM quinine (*p* = 0.0004).
+
+Quinine preference decreased as concentration increased, consistent with concentration-dependent aversion to bitter taste. These results confirm that mice reliably avoid quinine solutions, supporting its use as a bitter control condition for distinguishing taste-driven avoidance from nicotine-specific behavioral responses.
 
