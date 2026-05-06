@@ -1,6 +1,8 @@
 # behavior-choice-nicotine-analysis
 
-Data analysis of choice behavior in a two-option experiment to understand preference and consumption patterns.
+End-to-end R workflow for analyzing two-bottle choice behavioral experiments in mice to quantify consumption, preference, and dose-dependent behavioral responses.
+
+---
 
 # Overview
 
@@ -8,28 +10,31 @@ This project analyzes behavioral data from two-bottle choice experiments in mice
 
 The workflow investigates:
 
-Consumption behavior across sessions
-Preference ratios between solutions
-Dose-response relationships
-Substance-specific behavioral effects
-Potential experimental biases such as side or bottle effects
+- Consumption behavior across sessions
+- Preference ratios between solutions
+- Dose-response relationships
+- Substance-specific behavioral effects
+- Potential experimental biases such as side or bottle effects
 
 Quinine was included as a bitter control condition to distinguish taste-driven avoidance from nicotine-specific behavioral responses. While quinine consistently induced avoidance across animals, nicotine responses varied between individuals, enabling analysis of inter-animal variability in substance preference.
 
 A key component of the project involved reconstructing corrupted experimental data from raw time-series measurements following a bottle leakage event during session 11.
 
+---
+
 # Data and Methods
 
 The data originate from a MySQL database containing longitudinal two-bottle choice experiments in mice.
 
-Data Included
-Session metadata (session number, timestamps)
-Animal metadata (mouse ID, body weight)
-Consumption measurements per bottle
-Solution identity and concentration
-Raw time-series CSV measurements for corrupted sessions
+## Data Included
 
-# Analytical Workflow
+- Session metadata (session number, timestamps)
+- Animal metadata (mouse ID, body weight)
+- Consumption measurements per bottle
+- Solution identity and concentration
+- Raw time-series CSV measurements for corrupted sessions
+
+## Analytical Workflow
 
 The pipeline includes:
 
@@ -38,14 +43,18 @@ The pipeline includes:
 - Computation of consumption, preference (%), and weight-normalized intake metrics
 - Manual reconstruction of corrupted session data from raw time-series logs
 - Per-animal analysis using `purrr`
-- Statistical summarization (mean, SD, SEM)
+- Statistical summarization and dose-response analysis
 - Automated visualization generation using `ggplot2`
+
+Statistical analyses included Friedman tests, Mann–Whitney post hoc comparisons with Holm–Bonferroni correction, and summary statistics (mean, SD, SEM).
 
 A corrupted session caused by bottle leakage required manual recovery of accurate consumption values from second-by-second raw measurements before reintegration into the analysis pipeline.
 
+---
+
 # Running the Analysis
 
-Requirements
+## Requirements
 
 The workflow was developed in **R** and requires:
 
@@ -56,16 +65,14 @@ library(DBI)
 library(RMySQL)
 library(readr)
 
-Install missing packages with : 
-
-install.packages(c(
+Install missing packages with install.packages(c(
   "tidyverse",
   "ggplot2",
   "rstatix",
   "DBI",
   "RMySQL",
   "readr"
-))
+)) 
 
 # Database Setup
 
@@ -79,52 +86,57 @@ Ensure access to:
 
 the MySQL database,
 and raw CSV files used for session correction.
-
-# Running the analysis :
+Execute the Workflow
 
 Run the analysis script:
 
 source("analysis_script.R")
 
-The workflow automatically extracts experimental data, computes behavioral metrics, applies session corrections, and generates statistical summaries and visualizations.
+The workflow automatically:
 
-# Example outputs:
+extracts experimental data from MySQL,
+computes behavioral metrics,
+applies session corrections,
+and generates statistical summaries and visualizations.
+
+# Example Outputs
 
 Running the workflow generates:
 
-
 Consumption and preference summaries
-
-
 Dose-response visualizations
-
-
 Weight-normalized intake metrics
-
-
 Statistical summary tables
-
-
 Behavioral comparison plots
-
-
 Session-by-session consumption trajectories
 
+Representative outputs may include:
 
-Representative outputs may include nicotine vs quinine comparisons, individual variability analyses, and corrected-session visualizations.
+nicotine vs quinine comparison plots,
+individual animal variability analyses,
+and corrected-session visualizations.
 
-> Note: Figures are derived from analysis outputs generated in R and were post-processed in Adobe Illustrator for publication-quality formatting.
+Note: Figures are derived from analysis outputs generated in R and were post-processed in Adobe Illustrator for publication-quality formatting.
 
 # Reproducibility
 
-The workflow was designed as a reproducible behavioral analytics pipeline integrating database extraction, longitudinal preprocessing, and automated visualization generation.
+The workflow was designed as a reproducible behavioral analytics pipeline integrating database extraction, longitudinal preprocessing, statistical analysis, and automated visualization generation.
+
 Because experimental databases and raw correction files are not publicly distributed, users must provide local database access and raw CSV files before running the analysis.
 
-# Quinine Preference Across Concentrations
+# Representative Results
 
-![Quinine Preference](figures/quinine_preference.png)
+Figure 1. Percentage quinine preference across the three concentrations tested. Statistical analysis was performed using a Friedman test (n = 15, df = 3, p < 0.0001), followed by Mann–Whitney post hoc comparisons with Holm–Bonferroni correction. Significant differences were observed between 30 vs 100 µM quinine (p = 0.0004) and 100 vs 300 µM quinine (p = 0.0004).
 
-**Figure 1.** Percentage quinine preference across the three concentrations tested. Statistical analysis was performed using a Friedman test (n = 15, df = 3, *p* < 0.0001), followed by Mann–Whitney post hoc comparisons with Holm–Bonferroni correction. Significant differences were observed between 30 vs 100 µM quinine (*p* = 0.0004) and 100 vs 300 µM quinine (*p* = 0.0004).
+Quinine preference decreased as concentration increased, confirming robust concentration-dependent bitter avoidance behavior. These results validate the experimental paradigm and support the use of quinine as a control condition for distinguishing taste-driven aversion from nicotine-specific behavioral responses.
+Quinine Preference Across Concentrations
 
-Quinine preference decreased as concentration increased, consistent with concentration-dependent aversion to bitter taste. These results confirm that mice reliably avoid quinine solutions, supporting its use as a bitter control condition for distinguishing taste-driven avoidance from nicotine-specific behavioral responses.
+Representative nicotine-related analyses generated by the workflow are not shown in this repository.
 
+# Related Publication
+
+This repository contains behavioral analysis workflows associated with:
+
+:contentReference[oaicite:0]{index=0}
+
+Mondoloni S, Nguyen C, Vicq E, Ciscato M, Jehl J, Durand-de Cuttoli R, et al. (2023). *Prolonged nicotine exposure reduces aversion to the drug in mice by altering nicotinic transmission in the interpeduncular nucleus*. eLife 12:e80767. https://doi.org/10.7554/eLife.80767 :contentReference[oaicite:1]{index=1}
