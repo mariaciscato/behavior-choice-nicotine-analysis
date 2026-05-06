@@ -1,55 +1,120 @@
 # behavior-choice-nicotine-analysis
+
 Data analysis of choice behavior in a two-option experiment to understand preference and consumption patterns.
 
-# Problem statement
-This project analyzes behavioral data from a two-bottle choice experiment in mice, where animals choose between a control solution (water or saccharine) and an experimental solution (nicotine or quinine).
+# Overview
 
-The goal is to quantify consumption patterns, preference (%), and dose-response relationships, while accounting for potential experimental biases (e.g., side or bottle effects).
+This project analyzes behavioral data from two-bottle choice experiments in mice, where animals choose between a control solution (water or saccharine) and an experimental solution (nicotine or quinine).
 
-A key challenge is the presence of corrupted data (session 11) due to a bottle leakage event, requiring manual reconstruction of consumption values from raw time-series logs.
+The workflow investigates:
 
-Importantly, quinine serves as a bitter control to distinguish taste-driven avoidance from true behavioral responses. While all mice avoid quinine, nicotine elicits variable responses across individuals, allowing us to assess substance-specific effects beyond simple bitterness aversion.
+Consumption behavior across sessions
+Preference ratios between solutions
+Dose-response relationships
+Substance-specific behavioral effects
+Potential experimental biases such as side or bottle effects
 
-# Data description
+Quinine was included as a bitter control condition to distinguish taste-driven avoidance from nicotine-specific behavioral responses. While quinine consistently induced avoidance across animals, nicotine responses varied between individuals, enabling analysis of inter-animal variability in substance preference.
 
-The data come from a MySQL database containing two-bottle choice experiments in mice.
+A key component of the project involved reconstructing corrupted experimental data from raw time-series measurements following a bottle leakage event during session 11.
 
-It includes:
+# Data and Methods
 
-Session data (session number, timestamps)
+The data originate from a MySQL database containing longitudinal two-bottle choice experiments in mice.
+
+Data Included
+Session metadata (session number, timestamps)
 Animal metadata (mouse ID, body weight)
-Consumption data (volume per bottle, solution type, concentration)
+Consumption measurements per bottle
+Solution identity and concentration
+Raw time-series CSV measurements for corrupted sessions
 
-Sampling resolution:
+# Analytical Workflow
 
-Consumption was recorded every second
-Body weight was measured approximately every 4 days
+The pipeline includes:
 
-To address a corrupted session (due to bottle leakage), raw CSV files with time-resolved measurements were used to manually reconstruct accurate consumption values.
+- SQL-based extraction of behavioral data from MySQL
+- Data preprocessing and feature engineering
+- Computation of consumption, preference (%), and weight-normalized intake metrics
+- Manual reconstruction of corrupted session data from raw time-series logs
+- Per-animal analysis using `purrr`
+- Statistical summarization (mean, SD, SEM)
+- Automated visualization generation using `ggplot2`
 
-# Key techniques used
+A corrupted session caused by bottle leakage required manual recovery of accurate consumption values from second-by-second raw measurements before reintegration into the analysis pipeline.
 
-SQL data extraction (MySQL → R)
-Data cleaning & preprocessing (filtering, missing values, type conversion)
-Feature engineering (consumption volumes, preference %, weight-normalized intake)
-Manual data correction from raw time-series logs (corrupted session recovery)
-Functional programming (purrr) to automate per-animal analysis
-Statistical summarization (mean, SD, SEM)
-Data visualization with ggplot2
+# Running the Analysis
 
-# How to run the code
+Requirements
 
-1) Install required R packages:
+The workflow was developed in **R** and requires:
 
-install.packages(c("tidyverse", "ggplot2", "rstatix", "DBI", "RMySQL", "readr"))
+library(tidyverse)
+library(ggplot2)
+library(rstatix)
+library(DBI)
+library(RMySQL)
+library(readr)
 
-2) Update the MySQL database credentials in the script (user, password, host).
+Install missing packages with : 
 
-Ensure access to the database and place required CSV files (for session correction) in the correct directory.
+install.packages(c(
+  "tidyverse",
+  "ggplot2",
+  "rstatix",
+  "DBI",
+  "RMySQL",
+  "readr"
+))
 
-3) Run the script:
+# Database Setup
+
+Update the MySQL connection credentials in the analysis script:
+
+user <- "your_username"
+password <- "your_password"
+host <- "your_host"
+
+Ensure access to:
+
+the MySQL database,
+and raw CSV files used for session correction.
+
+# Running the analysis :
+
+Run the analysis script:
 
 source("analysis_script.R")
-The script will extract data, compute consumption and preference metrics, apply corrections, and generate summary outputs and plots.
+
+The workflow automatically extracts experimental data, computes behavioral metrics, applies session corrections, and generates statistical summaries and visualizations.
 
 # Example outputs:
+
+Running the workflow generates:
+
+
+Consumption and preference summaries
+
+
+Dose-response visualizations
+
+
+Weight-normalized intake metrics
+
+
+Statistical summary tables
+
+
+Behavioral comparison plots
+
+
+Session-by-session consumption trajectories
+
+
+Representative outputs may include nicotine vs quinine comparisons, individual variability analyses, and corrected-session visualizations.
+
+# Reproducibility
+
+The workflow was designed as a reproducible behavioral analytics pipeline integrating database extraction, longitudinal preprocessing, and automated visualization generation.
+Because experimental databases and raw correction files are not publicly distributed, users must provide local database access and raw CSV files before running the analysis.
+
